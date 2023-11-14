@@ -1,6 +1,15 @@
 import pandapower as pp
 import numpy as np
 
+def downstream(net, n):
+    downstream_buses = []
+    for i in range(0, len(net.line)):
+        if net.line.iloc[i].from_bus==n:
+            downstream_buses.append(net.line.iloc[i].to_bus)
+            downstream_buses+= downstream(net, net.line.iloc[i].to_bus)         
+    return downstream_buses
+    
+
 net_full = pp.networks.create_cigre_network_lv()
 
 net = pp.create.create_empty_network()
@@ -9,7 +18,11 @@ net.bus = net_full.bus[["R" in name for name in net_full.bus.name]]
 net.load = net_full.load[["R" in name for name in net_full.load.name]]
 net.line = net_full.line[["R" in name for name in net_full.line.name]]
 net.trafo = net_full.trafo[["R" in name for name in net_full.trafo.name]]
-pp.create_ext_grid(net, 1, vm_pu=1.04)
+#pp.create_ext_grid(net, 1, vm_pu=1.04)
+pp.create_ext_grid(net, 1)
+
+#net.load.p_mw[2]=0
+#net.load.q_mvar[2]=0
 
 pp.runpp(net)
 
@@ -55,4 +68,10 @@ print("Transformer resistance: {}, reactance: {}".format(rt, xt))
 print(A)
 
 nu = (net.ext_grid.vm_pu[0]**2)*np.ones((n, 1)) - 2*R @ P - 2*X @ Q
-print(np.sqrt(nu))
+vlin=np.sqrt(nu)
+print(vlin)
+
+vmod = net.res_bus.vm_pu[1:].array.reshape(n, 1)
+
+error = 100*(vmod-vlin)/(np.ones((n, 1))-vlin)
+print(error)
