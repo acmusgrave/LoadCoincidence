@@ -55,19 +55,20 @@ F = np.linalg.inv(A)
 
 
 
-#inediagr = (1/z_base)*np.diag(net.line.r_ohm_per_km*net.line.length_km)
-#diagr = np.block([[rt, np.zeros((1, n-1))],[np.zeros((n-1, 1)), linediagr]])
+linediagr = (1/z_base)*np.diag(net.line.r_ohm_per_km*net.line.length_km)
+diagr = np.block([[rt, np.zeros((1, n-1))],[np.zeros((n-1, 1)), linediagr]])
 Dr = (1/z_base)*np.diag(netmodel.line.r_ohm_per_km*netmodel.line.length_km)
 R = F @ Dr @ F.T
 print(R)
 
-#linediagx = (1/z_base)*np.diag(net.line.x_ohm_per_km*net.line.length_km)
-#diagx = np.block([[xt, np.zeros((1, n-1))],[np.zeros((n-1, 1)), linediagr]])
+linediagx = (1/z_base)*np.diag(net.line.x_ohm_per_km*net.line.length_km)
+diagx = np.block([[xt, np.zeros((1, n-1))],[np.zeros((n-1, 1)), linediagx]])
 
 Dx = (1/z_base)*np.diag(netmodel.line.x_ohm_per_km*netmodel.line.length_km)
 X = F @ Dx @ F.T
 print(X)
 
+buses = np.zeros((n, 1))
 P = np.zeros((n, 1))
 Q = np.zeros((n, 1))
 
