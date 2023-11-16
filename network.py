@@ -27,9 +27,9 @@ pp.runpp(net)
 z_base = (400**2)/1e6
 
 netmodel = pp.create.create_empty_network()
-netmodel.bus=net.bus
-netmodel.load=net.load
-netmodel.line=net.line
+netmodel.bus=net.bus.copy()
+netmodel.load=net.load.copy()
+netmodel.line=net.line.copy()
 
 # Extract tranformer impedence from Ybus
 Ybus = net._ppc["internal"]["Ybus"].todense()
