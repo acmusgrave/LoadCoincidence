@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 def decay(x, k, gamma, c):
     return k*(1/(x**gamma)) + c
 
-PATH = "C:\\Users\\Andrew\\Documents\MASc\\LoadCoincidence\\load_data\\"
+PATH = "C:\\Users\\Andrew\\Documents\\MASc\\LoadCoincidence\\load_data\\"
 
 df = pd.read_parquet(PATH+"residential_loads.parquet")
 
