@@ -52,7 +52,7 @@ R = F @ diagr @ F.T
 print(R)
 
 linediagx = (1/Zbase)*np.diag(net.line.x_ohm_per_km*net.line.length_km)
-diagx = np.block([[xt, np.zeros((1, n-1))],[np.zeros((n-1, 1)), linediagr]])
+diagx = np.block([[xt, np.zeros((1, n-1))],[np.zeros((n-1, 1)), linediagx]])
 X = F @ diagx @ F.T
 print(X)
 
