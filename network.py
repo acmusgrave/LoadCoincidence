@@ -1,13 +1,21 @@
 import pandapower as pp
 import numpy as np
 
-def downstream(net, n):
-    downstream_buses = []
+def downstream_buses(net, n):
+    downstream = []
     for i in range(0, len(net.line)):
         if net.line.iloc[i].from_bus==n:
-            downstream_buses.append(net.line.iloc[i].to_bus)
-            downstream_buses+= downstream(net, net.line.iloc[i].to_bus)         
-    return downstream_buses
+            downstream.append(net.line.iloc[i].to_bus)
+            downstream += downstream_buses(net, net.line.iloc[i].to_bus)         
+    return downstream
+    
+def upstream_lines(net, n):
+    upstream = []
+    for i in range(0, len(net.line)):
+        if net.line.iloc[i].to_bus==n:
+            upstream.append(i)
+            upstream += upstream_lines(net, net.line.iloc[i].from_bus)
+    return upstream
     
 
 net_full = pp.networks.create_cigre_network_lv()
@@ -81,3 +89,13 @@ vmod = net.res_bus.vm_pu[1:].array.reshape(n, 1)
 
 error = 100*(vlin-vmod)/(np.ones((n, 1))-vlin)
 print(error)
+
+c = [1, 0.8, 0.7, 0.65, 0.625]
+"""
+for i in range(0, len(netmodel.bus)):
+    lines = upstream_lines(netmodel, i)
+    dnu = 0
+    for j in range(0, len(lines)):
+        dnu += (1/zbase)*netmodel.line.iloc[lines[j]].r_ohm_per_km*netmodel.line.iloc[lines[j]].length_km*
+        """
+        
