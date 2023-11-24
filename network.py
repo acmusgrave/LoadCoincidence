@@ -66,11 +66,9 @@ F = np.linalg.inv(A)
 
 r_line = (1/z_base)*netmodel.line.r_ohm_per_km*netmodel.line.length_km
 R = F @ np.diag(r_line) @ F.T
-print(R)
 
 x_line = (1/z_base)*netmodel.line.x_ohm_per_km*netmodel.line.length_km
 X = F @ np.diag(x_line) @ F.T
-print(X)
 
 buses = np.zeros((n, 1))
 P = np.zeros((n, 1))
@@ -80,18 +78,14 @@ for b, p, q in zip(netmodel.load.bus, netmodel.load.p_mw, netmodel.load.q_mvar):
     P[b-2]=p
     Q[b-2]=q
 
-print(net.res_bus)
-print("Transformer resistance: {}, reactance: {}".format(rt, xt))
-print(A)
+
 
 nu = (net.ext_grid.vm_pu[0]**2)*np.ones((n, 1)) - 2*R @ P - 2*X @ Q
 vlin=np.sqrt(nu)
-print(vlin)
 
 vmod = net.res_bus.vm_pu[1:].array.reshape(n, 1)
 
 error = 100*(vlin-vmod)/(np.ones((n, 1))-vlin)
-print(error)
 
 c = [1, 0.8, 0.7, 0.65, 0.625, 0.6]
 m = [0, 0.04, 0.06, 0.07, 0.075, 0.0775]
@@ -99,12 +93,14 @@ m = [0, 0.04, 0.06, 0.07, 0.075, 0.0775]
 nu_lcf = np.ones((n, 1))
 nu_mcl = np.ones((n, 1))
 
+downstream_of_line = [[b-2 for b in downstream_buses(netmodel, ln)] for ln in range(0, n)]
+
 
 # TODO: clean up indexing logic here
 for i in range(0, len(netmodel.bus)-1):
     lines = upstream_lines(netmodel, i+2)
     for j in range(0, len(lines)):
-        downstream = [b-2 for b in downstream_buses(netmodel, lines[j])]
+        downstream = downstream_of_line[lines[j]]
         n_loads = sum(P[downstream]!= 0)[0]
         nu_lcf[i] -= 2*c[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
         nu_mcl[i] -= 2*m[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
@@ -112,12 +108,28 @@ for i in range(0, len(netmodel.bus)-1):
 v_lcf = np.sqrt(nu_lcf)
 v_mcl = np.sqrt(nu_mcl)
 
-print(v_lcf)
-print(v_mcl)
+def show_results():
+    print(net.res_bus)
+    print("Transformer resistance: {}, reactance: {}".format(rt, xt))
+    print("A:")
+    print(A)
+    print("R:")
+    print(R)
+    print("X:")
+    print(X)
+    print("vlin:")
+    print(vlin)
+    print("error:")
+    print(error)
+    print("v_lcf:")
+    print(v_lcf)
+    print("v_mcl")
+    print(v_mcl)
+    fig, ax = plt.subplots()
+    ax.plot(v_lcf)
+    ax.plot(v_mcl)
+    ax.plot(vmod)
+    plt.show()
 
-
-fig, ax = plt.subplots()
-ax.plot(v_lcf)
-ax.plot(v_mcl)
-ax.plot(vmod)
-plt.show()
+if __name__=="__main__":
+    show_results()
