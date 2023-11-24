@@ -1,14 +1,16 @@
 import pandapower as pp
 import numpy as np
 
+# List of bus indices downstream of line of index n
 def downstream_buses(net, n):
-    downstream = []
+    downstream = [net.line.iloc[n].to_bus]
     for i in range(0, len(net.line)):
-        if net.line.iloc[i].from_bus==n:
-            downstream.append(net.line.iloc[i].to_bus)
-            downstream += downstream_buses(net, net.line.iloc[i].to_bus)         
+        if net.line.iloc[i].from_bus==net.line.iloc[n].to_bus:
+            # downstream.append(net.line.iloc[i].to_bus)
+            downstream += downstream_buses(net, i)         
     return downstream
     
+# List of line indices upstream of bus of index n
 def upstream_lines(net, n):
     upstream = []
     for i in range(0, len(net.line)):
@@ -61,12 +63,13 @@ for i in range(1, n):
     
 F = np.linalg.inv(A)
 
-Dr = (1/z_base)*np.diag(netmodel.line.r_ohm_per_km*netmodel.line.length_km)
-R = F @ Dr @ F.T
+r_line = (1/z_base)*netmodel.line.r_ohm_per_km*netmodel.line.length_km
+R = F @ np.diag(r_line) @ F.T
 print(R)
 
-Dx = (1/z_base)*np.diag(netmodel.line.x_ohm_per_km*netmodel.line.length_km)
-X = F @ Dx @ F.T
+
+x_line = (1/z_base)*netmodel.line.x_ohm_per_km*netmodel.line.length_km
+X = F @ np.diag(x_line) @ F.T
 print(X)
 
 buses = np.zeros((n, 1))
@@ -91,11 +94,18 @@ error = 100*(vlin-vmod)/(np.ones((n, 1))-vlin)
 print(error)
 
 c = [1, 0.8, 0.7, 0.65, 0.625]
-"""
-for i in range(0, len(netmodel.bus)):
-    lines = upstream_lines(netmodel, i)
-    dnu = 0
+
+nu_lcf = np.ones((n, 1))
+
+
+# TODO: clean up indexing logic here
+for i in range(0, len(netmodel.bus)-1):
+    lines = upstream_lines(netmodel, i+2)
     for j in range(0, len(lines)):
-        dnu += (1/zbase)*netmodel.line.iloc[lines[j]].r_ohm_per_km*netmodel.line.iloc[lines[j]].length_km*
-        """
+        downstream = [b-2 for b in downstream_buses(netmodel, lines[j])]
+        nu_lcf[i] -= 2*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
+        
+v_lcf = np.sqrt(nu_lcf)
+print(v_lcf)
+        
         
