@@ -31,8 +31,8 @@ net.line = net_full.line[["R" in name for name in net_full.line.name]]
 net.trafo = net_full.trafo[["R" in name for name in net_full.trafo.name]]
 pp.create_ext_grid(net, 1, vm_pu=1)
 
-#net.load.p_mw[2]=0
-#net.load.q_mvar[2]=0
+net.load.p_mw[2]=0.5*net.load.p_mw[2]
+net.load.q_mvar[2]=0.5*net.load.q_mvar[2]
 
 pp.runpp(net)
 z_base = (400**2)/1e6
@@ -87,11 +87,16 @@ vmod = net.res_bus.vm_pu[1:].array.reshape(n, 1)
 
 error = 100*(vlin-vmod)/(np.ones((n, 1))-vlin)
 
-c = [1, 0.8, 0.7, 0.65, 0.625, 0.6]
-m = [0, 0.04, 0.06, 0.07, 0.075, 0.0775]
+# c = [1.0, 0.8, 0.7, 0.65, 0.625, 0.6]
+# m = [0.0, 0.04, 0.06, 0.07, 0.075, 0.0775]
 
-nu_lcf = np.ones((n, 1))
-nu_mcl = np.ones((n, 1))
+# Values from Kersting
+c = [1.0, 1/1.6, 1/1.8, 1/2.1, 1/2.2, 1/2.3]
+# Ignoring MCL characteristics
+m = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+nu_lcf = np.zeros((n, 1))
+nu_mcl = np.zeros((n, 1))
 
 downstream_of_line = [[b-2 for b in downstream_buses(netmodel, ln)] for ln in range(0, n)]
 
@@ -105,8 +110,15 @@ for i in range(0, len(netmodel.bus)-1):
         nu_lcf[i] -= 2*c[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
         nu_mcl[i] -= 2*m[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
         
-v_lcf = np.sqrt(nu_lcf)
-v_mcl = np.sqrt(nu_mcl)
+v_lcf = np.sqrt(np.ones([n, 1]) + nu_lcf)
+v_mcl = np.sqrt(np.ones([n, 1]) + nu_mcl)
+
+load_bus = [i for i, p in zip(range(0, len(P)), P) if p!=0.0]
+n_l = len(load_bus)
+K = np.zeros([n, n_l])
+for i in range(0, n):
+    for j in range(0, n_l):
+        K[i, j] = i==load_bus[j]
 
 def show_results():
     print(net.res_bus)
@@ -126,9 +138,7 @@ def show_results():
     print("v_mcl")
     print(v_mcl)
     fig, ax = plt.subplots()
-    ax.plot(v_lcf)
-    ax.plot(v_mcl)
-    ax.plot(vmod)
+    ax.fill_between(range(2, n+2), v_lcf.flatten(), v_mcl.flatten(), alpha=0.5, color="green")
     plt.show()
 
 if __name__=="__main__":
