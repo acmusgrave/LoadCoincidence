@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
 import matplotlib.pyplot as plt
-from network import n, n_loads, R, X, netmodel, nu_lcf, nu_mcl, K
+from network import n, n_loads, R, X, netmodel, nu_lcf, nu_mcl, K, load_bus
 
 p_c_costs = np.array([2.0, 1.0, 2.2, 0.1, 3.0, 4.5]).reshape([1, n_loads])
 p_r_costs = -1.0*np.ones([1, n_loads])
@@ -53,6 +53,7 @@ rc = {"font.family" : "serif",
 plt.rcParams.update(rc)
 plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
 fig, ax = plt.subplots()
+fig.set_figwidth(7.4)
 #ax.fill_between(range(2, n+2), v_wc_min.flatten(), v_wc_max.flatten(), alpha=0.5, color="#1A851D")
 ax.fill_between(range(2, n+2), v_wc_min.flatten(), v_wc_max.flatten(), facecolor="#7BBD75")
 ax.plot(range(2, n+2), v_min*np.ones(n), color="#880404", linestyle="--")
@@ -68,4 +69,28 @@ yticklabels = ["{:.2f}".format(tick) for tick in yticks]
 ax.set_yticks(yticks)
 ax.set_yticklabels(yticklabels, fontname="Times New Roman", fontsize=12)
 fig.savefig('VoltagePlot.eps')
+
+reduced_labels = [1, 2, 3, 4 ,5, 6, 7, 8, 9, 10]
+reduced_buses = [0, 2, 3, 5, 8, 10, 14, 15, 16, 17]
+
+x = np.linspace(0, 11, 100)
+
+fig2, ax2 = plt.subplots()
+fig2.set_figwidth(7.4)
+#ax2.fill_between(range(0, len(load_bus)), v_wc_min.flatten()[load_bus], v_wc_max.flatten()[load_bus], facecolor="#7BBD75")
+ax2.bar(reduced_labels, v_wc_max.flatten()[reduced_buses]-v_wc_min.flatten()[reduced_buses], bottom=v_wc_min.flatten()[reduced_buses], width=0.7, facecolor="#1A851D")
+ax2.plot(x, v_min*np.ones_like(x), color="#880404", linestyle="--")
+ax2.plot(x, v_max*np.ones_like(x), color="#880404", linestyle="--")
+bus_markers = [i for i in range(0, len(reduced_buses)+2)]
+ax2.plot(bus_markers, np.ones_like(bus_markers), marker='+', markersize=8, color="#444444")
+ax2.set_ylabel("$V$ (p.u.)", fontname="Times New Roman", fontsize=14)
+ax2.set_xlabel("Bus", fontname="Times New Roman", fontsize=14)
+ax2.set_xticks([2, 4, 6, 8, 10])
+ax2.set_xticklabels([2, 4, 6, 8, 10], fontname="Times New Roman", fontsize=12)
+yticks = ax2.yaxis.get_ticklocs()
+yticklabels = ["{:.2f}".format(tick) for tick in yticks]
+ax2.set_yticks(yticks)
+ax2.set_yticklabels(yticklabels, fontname="Times New Roman", fontsize=12)
+ax2.set_xlim([0.5, 10.5])
+ax2.set_ylim([0.92, 1.08])
 plt.show()
