@@ -87,13 +87,12 @@ vmod = net.res_bus.vm_pu[1:].array.reshape(n, 1)
 
 error = 100*(vlin-vmod)/(np.ones((n, 1))-vlin)
 
-# c = [1.0, 0.8, 0.7, 0.65, 0.625, 0.6]
-# m = [0.0, 0.04, 0.06, 0.07, 0.075, 0.0775]
-
+# Load coincidence factors
 # Values from Kersting
-c = [1.0, 1/1.6, 1/1.8, 1/2.1, 1/2.2, 1/2.3]
+lcf = [1.0, 1/1.6, 1/1.8, 1/2.1, 1/2.2, 1/2.3]
+# Minimum coincident loads (needs to be demonstrated from data)
 # Ignoring MCL characteristics
-m = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+mcl = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 nu_lcf = np.zeros((n, 1))
 nu_mcl = np.zeros((n, 1))
@@ -101,14 +100,14 @@ nu_mcl = np.zeros((n, 1))
 downstream_of_line = [[b-2 for b in downstream_buses(netmodel, ln)] for ln in range(0, n)]
 
 
-# TODO: clean up indexing logic here
+# Calculate load contribution to minimum and maximum squared voltage
 for i in range(0, len(netmodel.bus)-1):
     lines = upstream_lines(netmodel, i+2)
     for j in range(0, len(lines)):
         downstream = downstream_of_line[lines[j]]
         n_loads = sum(P[downstream]!= 0)[0]
-        nu_lcf[i] -= 2*c[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
-        nu_mcl[i] -= 2*m[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
+        nu_lcf[i] -= 2*lcf[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
+        nu_mcl[i] -= 2*mcl[n_loads-1]*(r_line[lines[j]]*sum(P[downstream]) + x_line[lines[j]]*sum(Q[downstream]))
         
 v_lcf = np.sqrt(np.ones([n, 1]) + nu_lcf)
 v_mcl = np.sqrt(np.ones([n, 1]) + nu_mcl)
